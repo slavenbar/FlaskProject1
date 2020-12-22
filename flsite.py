@@ -3,7 +3,6 @@ import sqlite3
 import os
 from FDataBase import FDataBase
 
-
 DATABASE = '/tmp/flsite.db'
 DEBUG = True
 SECRET_KEY = 'fdgfh78@#5?>gfhf89dx,v06k'
@@ -11,7 +10,7 @@ SECRET_KEY = 'fdgfh78@#5?>gfhf89dx,v06k'
 app = Flask(__name__)
 app.config.from_object(__name__)
 
-app.config.update(dict(DATABASE=os.path.join(app.root_path,'flsite.db')))
+app.config.update(dict(DATABASE=os.path.join(app.root_path,'/tmp/flsite.db')))
 
 def connect_db():
     conn = sqlite3.connect(app.config['DATABASE'])
@@ -65,7 +64,7 @@ def about():
     return render_template('about.html', title='Мы в ай ти', menu=menu)
 
 
-@app.route("/profile/add_post", methods=["POST", "GET"])
+@app.route("/add_post", methods=["POST", "GET"])
 def addPost():
     db = get_db()
     dbase = FDataBase(db)
@@ -81,7 +80,6 @@ def addPost():
             flash('Ошибка добавления статьи', category='error')
 
     return render_template('add_post.html', menu=dbase.getMenu(), title="Добавление статьи")
-
 
 #Пользователь отправляет сообщение на сайт
 
