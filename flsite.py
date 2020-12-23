@@ -79,10 +79,8 @@ menu = [{'name':'Главная', 'url': 'main-app'},
 def index():
     return render_template('index.html', title='Искусственный интеллект на связи!', menu=menu)
 
-@app.route('/profile/main-app')
+@app.route('/main-app')
 def main_app():
-    if 'userLogged' in session:
-
         return render_template('index.html', title='Искусственный интеллект на связи!', menu=menu)
 
 @app.route('/profile/neuro-app')
@@ -157,15 +155,13 @@ def login():
         except:
             db.session.rollback()
             print("Ошибка добавления в БД")
-
-    return render_template('login.html', title="Авторизация", menu=menu)
-
-
+        return redirect("main-app")
+    return render_template("login.html", title="Регистрация",menu=menu)
 
 #Повторный вход в регистрацию
 @app.route("/profile/login")
 def profile2():
-        return render_template('registry.html', title=f'Ещё раз повторяю - вы зарегистрировались : {"товарищ"}', menu=menu)
+        return render_template('registry.html', title=f'Вы зарегистрировались : {"товарищ"}', menu=menu)
 
 
 
