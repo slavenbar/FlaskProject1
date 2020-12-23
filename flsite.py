@@ -4,6 +4,7 @@ import os
 from FDataBase import FDataBase
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+from werkzeug.security import generate_password_hash,check_password_hash
 
 DATABASE = '/tmp/flsite.db'
 DEBUG = True
@@ -130,15 +131,36 @@ def profile(username):
         return render_template('registry.html', title=f'Вы зарегались : {username}', menu=menu)
 
 
+# @app.route("/login", methods=["POST", "GET"])
+# def login():
+#     if 'userLogged' in session:
+#         return redirect(url_for('profile', username=session['userLogged']))
+#     elif request.form.get('username') and request.form.get('psw') :
+#         session['userLogged'] = request.form.get('username')
+#         return redirect(url_for('profile', username=session['userLogged']))
+#
+#     return render_template('login.html', title="Авторизация", menu=menu)
 @app.route("/login", methods=["POST", "GET"])
 def login():
-    if 'userLogged' in session:
-        return redirect(url_for('profile', username=session['userLogged']))
-    elif request.form.get('username') and request.form.get('psw') :
-        session['userLogged'] = request.form.get('username')
-        return redirect(url_for('profile', username=session['userLogged']))
+    if request.method == "POST":
+        # здесь должна быть проверка корректности введенных данных
+        try:
+            hash = generate_password_hash(request.form['psw'])
+            u = Users(email=request.form['email'], psw=hash)
+            db.session.add(u)
+            db.session.flush()
+
+            p = Profiles(name=request.form['name'], old=request.form['old'],
+                         city=request.form['city'], user_id=u.id)
+            db.session.add(p)
+            db.session.commit()
+        except:
+            db.session.rollback()
+            print("Ошибка добавления в БД")
 
     return render_template('login.html', title="Авторизация", menu=menu)
+
+
 
 #Повторный вход в регистрацию
 @app.route("/profile/login")
