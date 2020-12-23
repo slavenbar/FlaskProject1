@@ -3,6 +3,7 @@ import sqlite3
 import os
 from FDataBase import FDataBase
 from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
 
 DATABASE = '/tmp/flsite.db'
 DEBUG = True
@@ -10,9 +11,33 @@ SECRET_KEY = 'fdgfh78@#5?>gfhf89dx,v06k'
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///blog.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
+
+
+class Users(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(50), unique=True)
+    psw = db.Column(db.String(500), nullable=True)
+    date = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f"<users {self.id}>"
+
+
+class Profiles(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=True)
+    old = db.Column(db.Integer)
+    city = db.Column(db.String(100))
+
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+
+    def __repr__(self):
+        return f"<profiles {self.id}>"
+
 #Закоментировать код ctrl+/
-#app.config.from_object(__name__)
+app.config.from_object(__name__)
 
 #app.config.update(dict(DATABASE=os.path.join(app.root_path,'/tmp/flsite.db')))
 
@@ -41,7 +66,7 @@ db = SQLAlchemy(app)
 #     if hasattr(g, 'link_db'):
 #         g.link_db.close()
 
-#app.config['SECRET_KEY'] = 'fdgdfgdfggf786hfg6hfg6h7f'
+app.config['SECRET_KEY'] = 'fdgdfgdfggf786hfg6hfg6h7f'
 menu = [{'name':'Главная', 'url': 'main-app'},
         {'name':'Нейросеть', 'url': 'neuro-app'},
         {'name':'Обратная связь','url': 'contact'},
@@ -68,22 +93,22 @@ def about():
     return render_template('about.html', title='Мы в ай ти', menu=menu)
 
 
-@app.route("/add_post", methods=["POST", "GET"])
-def addPost():
-    db = get_db()
-    dbase = FDataBase(db)
-
-    if request.method == "POST":
-        if len(request.form['name']) > 4 and len(request.form['post']) > 10:
-            res = dbase.addPost(request.form['name'], request.form['post'])
-            if not res:
-                flash('Ошибка добавления статьи', category='error')
-            else:
-                flash('Статья добавлена успешно', category='success')
-        else:
-            flash('Ошибка добавления статьи', category='error')
-
-    return render_template('add_post.html', menu=dbase.getMenu(), title="Добавление статьи")
+# @app.route("/add_post", methods=["POST", "GET"])
+# def addPost():
+#     db = get_db()
+#     dbase = FDataBase(db)
+#
+#     if request.method == "POST":
+#         if len(request.form['name']) > 4 and len(request.form['post']) > 10:
+#             res = dbase.addPost(request.form['name'], request.form['post'])
+#             if not res:
+#                 flash('Ошибка добавления статьи', category='error')
+#             else:
+#                 flash('Статья добавлена успешно', category='success')
+#         else:
+#             flash('Ошибка добавления статьи', category='error')
+#
+#     return render_template('add_post.html', menu=dbase.getMenu(), title="Добавление статьи")
 
 #Пользователь отправляет сообщение на сайт
 
@@ -104,9 +129,9 @@ def profile(username):
     else:
         return render_template('registry.html', title=f'Вы зарегались : {username}', menu=menu)
 
+
 @app.route("/login", methods=["POST", "GET"])
 def login():
-    print(url_for('login'))
     if 'userLogged' in session:
         return redirect(url_for('profile', username=session['userLogged']))
     elif request.form.get('username') and request.form.get('psw') :
@@ -114,6 +139,13 @@ def login():
         return redirect(url_for('profile', username=session['userLogged']))
 
     return render_template('login.html', title="Авторизация", menu=menu)
+
+#Повторный вход в регистрацию
+@app.route("/profile/login")
+def profile2():
+        return render_template('registry.html', title=f'Ещё раз повторяю - вы зарегистрировались : {"товарищ"}', menu=menu)
+
+
 
 #Декоратор для отправки ошибки
 @app.errorhandler(404)
